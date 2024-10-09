@@ -1,24 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+// src/components/PokemonCard.jsx
+import React from 'react';
+import { Card, CardContent, Typography, CardMedia } from '@mui/material';
+import { Link } from 'react-router-dom';
+import './PokemonCard.css'; // Importing component-specific styles
 
-function PokemonCard({ name, url }) {
-  const [pokemonData, setPokemonData] = useState(null);
-
-  useEffect(() => {
-    axios.get(url).then(res => {
-      setPokemonData(res.data);
-    });
-  }, [url]);
-
-  if (!pokemonData) return <div>Loading...</div>;
+const PokemonCard = ({ pokemon }) => {
+  const { name, sprites, id, types } = pokemon;
+  const image = sprites.front_default;
 
   return (
-    <div className="pokemon-card">
-      <img src={pokemonData.sprites.front_default} alt={name} />
-      <h2>{name}</h2>
-      <p>Types: {pokemonData.types.map(type => type.type.name).join(', ')}</p>
-    </div>
+    <Card style={{ maxWidth: 200, margin: '10px' }}>
+      <Link to={`/pokemon/${id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+        <CardMedia component="img" height="140" image={image} alt={name} />
+        <CardContent>
+          <Typography variant="h6" component="div" style={{ textTransform: 'capitalize' }}>
+            #{id} {name}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {types.map((typeInfo) => typeInfo.type.name).join(', ')}
+          </Typography>
+        </CardContent>
+      </Link>
+    </Card>
   );
-}
+};
 
 export default PokemonCard;

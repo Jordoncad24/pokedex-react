@@ -1,0 +1,13 @@
+/* src/components/Navbar.module.css */
+
+.navbar {
+    background-color: #ffcc00;
+    padding: 10px 20px;
+  }
+  
+  .navbarTitle {
+    color: #3b4cca;
+    font-size: 24px;
+    font-weight: bold;
+  }
+  
