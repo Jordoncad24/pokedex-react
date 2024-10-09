@@ -2,13 +2,42 @@
 import React, { useState, useEffect } from 'react';
 import { getPokemonDetails } from '../services/api';
 import { useParams } from 'react-router-dom';
-import { Box, Typography, CircularProgress, Chip, Grid } from '@mui/material';
+import { Box, Typography, CircularProgress, Chip, Grid2 } from '@mui/material';
 import typeColors from '../components/typecolors'; // Import the color mapping
+import { Link } from 'react-router-dom'; // Make sure to import Link
+
 
 const PokemonDetail = () => {
   const { id } = useParams();
   const [pokemon, setPokemon] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const renderEvolutions = (evolutionChain) => {
+    return (
+      <Box display="flex" alignItems="center" marginY={1}>
+        <Link to={`/pokemon/${evolutionChain.species.name}`} style={{ textDecoration: 'none' }}>
+          <img
+            src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${evolutionChain.species.url.split('/')[6]}.png`} // Correct sprite URL
+            alt={evolutionChain.species.name}
+            style={{ width: '60px', height: '60px', marginRight: '10px' }} // Style for sprite image
+          />
+        </Link>
+        <Link to={`/pokemon/${evolutionChain.species.name}`} style={{ textDecoration: 'none', marginRight: '10px', color: 'inherit' }}>
+          <Typography variant="body1" style={{ textTransform: 'capitalize', textAlign: 'center' }}>
+            {evolutionChain.species.name} (Level: {evolutionChain.evolution_details[0]?.min_level || 'N/A'})
+          </Typography>
+        </Link>
+  
+        {/* Recursive rendering for evolves_to */}
+        {evolutionChain.evolves_to.map((evolution) => (
+          <Box key={evolution.species.name} display="flex" alignItems="center" marginLeft={2}>
+            {renderEvolutions(evolution)}
+          </Box>
+        ))}
+      </Box>
+    );
+  };
+  
 
   useEffect(() => {
     // Fetch Pokémon details
@@ -44,15 +73,15 @@ const PokemonDetail = () => {
 
   return (
     <Box padding={4}>
-      <Grid container spacing={4}>
-        <Grid item xs={12} md={4}>
+      <Grid2 container spacing={4}>
+        <Grid2 item xs={12} md={4}>
           <img
             src={pokemon.sprites.other['official-artwork'].front_default}
             alt={pokemon.name}
             style={{ width: '100%' }}
           />
-        </Grid>
-        <Grid item xs={12} md={8}>
+        </Grid2>
+        <Grid2 item xs={12} md={8}>
           <Typography variant="h4" style={{ textTransform: 'capitalize' }}>
             #{pokemon.id} {pokemon.name}
           </Typography>
@@ -97,8 +126,40 @@ const PokemonDetail = () => {
             <Typography variant="body1">Height: {pokemon.height / 10} m</Typography>
             <Typography variant="body1">Weight: {pokemon.weight / 10} kg</Typography>
           </Box>
-        </Grid>
-      </Grid>
+          {/* Display Forms */}
+          <Typography variant="h5" marginTop={2}>
+            Forms:
+          </Typography>
+          {/* Display Forms */}
+          <Typography variant="h5" marginTop={2}>
+            Forms:
+          </Typography>
+          <Grid2 container spacing={2}>
+            {pokemon.forms.length > 0 ? (
+              pokemon.forms.map((form) => (
+                <Grid2 item key={form.name} xs={4}>
+                  <Link to={`/pokemon/${form.name}`}>
+                    <img
+                      src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${form.url.split('/')[6]}.png`}
+                      alt={form.name}
+                      style={{ width: '100px' }}
+                    />
+                    <Typography variant="body1" style={{ textTransform: 'capitalize' }}>
+                      {form.name}
+                    </Typography>
+                  </Link>
+                </Grid2>
+              ))
+            ) : (
+              <Typography variant="body1">N/A</Typography> // Display N/A if no forms exist
+            )}
+          </Grid2>
+          <Box marginY={1}>
+            <Typography variant="h6">Evolutions:</Typography>
+              {renderEvolutions(pokemon.evolution.chain)}
+          </Box>
+        </Grid2>
+      </Grid2>
     </Box>
   );
 };
