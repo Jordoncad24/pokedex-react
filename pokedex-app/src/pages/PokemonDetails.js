@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { getPokemonDetails } from '../services/api';
 import { useParams } from 'react-router-dom';
 import { Box, Typography, CircularProgress, Chip, Grid } from '@mui/material';
+import typeColors from '../components/typecolors'; // Import the color mapping
 
 const PokemonDetail = () => {
   const { id } = useParams();
@@ -56,13 +57,22 @@ const PokemonDetail = () => {
             #{pokemon.id} {pokemon.name}
           </Typography>
           <Box marginY={2}>
-            {pokemon.types.map((typeInfo) => (
-              <Chip
-                key={typeInfo.type.name}
-                label={typeInfo.type.name}
-                style={{ marginRight: '5px', textTransform: 'capitalize' }}
-              />
-            ))}
+            {pokemon.types.map((typeInfo) => {
+              const typeName = typeInfo.type.name;
+              const backgroundColor = typeColors[typeName] || '#777'; // Default color if type not found
+              return (
+                <Chip
+                  key={typeName}
+                  label={typeName}
+                  style={{
+                    marginRight: '5px',
+                    textTransform: 'capitalize',
+                    backgroundColor: backgroundColor,
+                    color: 'white', // Ensure text is readable
+                  }}
+                />
+              );
+            })}
           </Box>
           <Typography variant="h6">Abilities</Typography>
           <Box marginY={1}>
