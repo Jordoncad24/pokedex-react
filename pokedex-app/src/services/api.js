@@ -26,11 +26,15 @@ export const getPokemonDetails = async (nameOrId) => {
     const evolutionResponse = await axios.get(speciesData.evolution_chain.url);
     const evolutionData = evolutionResponse.data;
 
+    // Get flavor text (choose the first English entry for simplicity)
+    const flavorTextEntry = speciesData.flavor_text_entries.find(entry => entry.language.name === 'en');
+    const flavorText = flavorTextEntry ? flavorTextEntry.flavor_text : 'No flavor text available'; // Set default if not available
+
     // Fetch forms if available
     const forms = pokemonData.forms || [];
 
     // Return Pokémon data along with evolution and forms details
-    return { ...pokemonData, evolution: evolutionData, forms: forms };
+    return { ...pokemonData, evolution: evolutionData, forms: forms, flavorText: flavorText }; // Add flavorText here
   } catch (error) {
     console.error('Error fetching Pokémon details:', error);
     throw error; // Rethrow the error for handling in the component
