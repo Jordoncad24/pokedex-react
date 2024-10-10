@@ -1,3 +1,4 @@
+// src/services/api.js
 import axios from 'axios';
 
 const API_URL = 'https://pokeapi.co/api/v2';
@@ -17,7 +18,7 @@ export const getPokemonDetails = async (nameOrId) => {
     const response = await axios.get(`${API_URL}/pokemon/${nameOrId}`);
     const pokemonData = response.data;
 
-    // Fetch species data to get the evolution chain URL
+    // Fetch species data to get the evolution chain URL and forms
     const speciesResponse = await axios.get(pokemonData.species.url);
     const speciesData = speciesResponse.data;
 
@@ -25,12 +26,11 @@ export const getPokemonDetails = async (nameOrId) => {
     const evolutionResponse = await axios.get(speciesData.evolution_chain.url);
     const evolutionData = evolutionResponse.data;
 
-    // Return Pokémon data along with evolution details and forms
-    return { 
-      ...pokemonData, 
-      evolution: evolutionData,
-      forms: pokemonData.forms // Add forms to the returned data
-    };
+    // Fetch forms if available
+    const forms = pokemonData.forms || [];
+
+    // Return Pokémon data along with evolution and forms details
+    return { ...pokemonData, evolution: evolutionData, forms: forms };
   } catch (error) {
     console.error('Error fetching Pokémon details:', error);
     throw error; // Rethrow the error for handling in the component
