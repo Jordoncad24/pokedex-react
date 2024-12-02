@@ -3,6 +3,7 @@ import { getPokemonDetails } from '../services/api';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Box, Typography, CircularProgress, Chip, Grid2,  Button } from '@mui/material';
 import typeColors from '../components/typecolors'; // Import the color mapping
+import PokemonStats from '../components/PokemonStats';
 
 const PokemonDetail = () => {
   const { id } = useParams(); // id can be a name or number in the URL
@@ -142,17 +143,6 @@ const PokemonDetail = () => {
     </Box>
   );
 
-  // Render stats
-  const renderStats = () => (
-    <Box marginY={1}>
-      {pokemon.stats.map((statInfo) => (
-        <Typography key={statInfo.stat.name} variant="body1" style={{ textTransform: 'capitalize' }}>
-          {statInfo.stat.name}: {statInfo.base_stat}
-        </Typography>
-      ))}
-    </Box>
-  );
-
   // Render height and weight
   const renderHeightAndWeight = () => (
     <Box marginY={1}>
@@ -161,32 +151,71 @@ const PokemonDetail = () => {
     </Box>
   );
 
-  // Render forms
-  const renderForms = () => (
-    <Box marginY={2}>
-      <Typography variant="h5">Forms:</Typography>
-      <Grid2 container spacing={2}>
-        {pokemon.forms.length > 0 ? (
-          pokemon.forms.map((form) => (
-            <Grid2 item key={form.name} xs={4}>
-              <Link to={`/pokemon/${form.name}`}>
+  const renderForms = () => {
+    if (!pokemon.forms || pokemon.forms.length === 0) return null;
+  
+    // Normalize the Pokémon's name by checking for hyphenated versions
+    const normalizeName = (name) => name.replace(/-/g, ' '); // Convert hyphenated names to normal form
+    const normalizedPokemonName = normalizeName(pokemon.name);
+  
+    // Identify the normal form (this could be based on the base name of the Pokémon)
+    const normalForm = pokemon.forms.find((form) => normalizeName(form.name) === normalizedPokemonName);
+  
+    // Filter alternate forms - Only keep forms with ID >= 10001, or forms that are not the base form
+    const alternateForms = pokemon.forms.filter((form) => {
+      const formId = parseInt(form.url.split('/')[6], 10); // Get form ID from URL
+      // If form ID >= 10001, treat it as an alternate form, or if it's not the normal form
+      return formId >= 10001 && normalizeName(form.name) !== normalizedPokemonName;
+    });
+  
+    // Check if there are forms and handle rendering
+    return (
+      <Box marginY={2}>
+        <Typography variant="h6">Forms</Typography>
+        <Grid2 container spacing={2}>
+          {/* Render the normal form if it exists */}
+          {normalForm && (
+            <Grid2 item key={normalForm.name} xs={4}>
+              <Link to={`/pokemon/${normalForm.name}`}>
                 <img
-                  src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${form.url.split('/')[6]}.png`}
-                  alt={form.name}
+                  src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${normalForm.url.split('/')[6]}.png`}
+                  alt={normalForm.name}
                   style={{ width: '100px' }}
                 />
                 <Typography variant="body1" style={{ textTransform: 'capitalize' }}>
-                  {form.name}
+                  {normalForm.name}
                 </Typography>
               </Link>
             </Grid2>
-          ))
-        ) : (
-          <Typography variant="body1">N/A</Typography>
-        )}
-      </Grid2>
-    </Box>
-  );
+          )}
+  
+          {/* Render alternate forms */}
+          {alternateForms.length > 0 ? (
+            alternateForms.map((form) => {
+              const formId = form.url.split('/')[6]; // Extract form ID from URL
+              return (
+                <Grid2 item key={form.name} xs={4}>
+                  <Link to={`/pokemon/${formId}`}>
+                    <img
+                      src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${formId}.png`}
+                      alt={form.name}
+                      style={{ width: '100px' }}
+                    />
+                    <Typography variant="body1" style={{ textTransform: 'capitalize' }}>
+                      {form.name}
+                    </Typography>
+                  </Link>
+                </Grid2>
+              );
+            })
+          ) : (
+            <Typography variant="body1">No alternate forms available.</Typography>
+          )}
+        </Grid2>
+      </Box>
+    );
+  };
+  
 
   // Render evolutions
   const renderEvolutions = (evolutionChain) => {
@@ -278,7 +307,7 @@ const PokemonDetail = () => {
           <Typography variant="h6">Abilities</Typography>
           {renderAbilities()}
           <Typography variant="h6">Stats</Typography>
-          {renderStats()}
+          <PokemonStats stats={pokemon.stats} /> 
           <Typography variant="h6">Height & Weight</Typography>
           {renderHeightAndWeight()}
           {renderForms()}
