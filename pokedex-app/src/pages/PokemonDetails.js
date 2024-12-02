@@ -1,20 +1,52 @@
 import React, { useState, useEffect } from 'react';
 import { getPokemonDetails } from '../services/api';
-import { useParams, Link } from 'react-router-dom';
-import { Box, Typography, CircularProgress, Chip, Grid2 } from '@mui/material';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { Box, Typography, CircularProgress, Chip, Grid2,  Button } from '@mui/material';
 import typeColors from '../components/typecolors'; // Import the color mapping
 
 const PokemonDetail = () => {
-  const { id } = useParams();
+  const { id } = useParams(); // id can be a name or number in the URL
   const [pokemon, setPokemon] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [previousPokemon, setPreviousPokemon] = useState(null);
+  const [nextPokemon, setNextPokemon] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchPokemonDetails = async () => {
       setLoading(true);
       try {
-        const data = await getPokemonDetails(id);
-        setPokemon(data);
+        // Check if the ID is numeric (Pokédex number) or a name
+        const isNumericId = !isNaN(id);
+        const currentId = isNumericId ? parseInt(id) : await getPokemonIdByName(id);
+
+        if (currentId && !isNaN(currentId)) {
+          // Fetch the main Pokémon details
+          const data = await getPokemonDetails(currentId);
+          setPokemon(data);
+
+          // Calculate Previous and Next Pokémon
+          const maxPokemon = 1025; // Maximum Pokémon ID
+          const prevId = currentId === 1 ? maxPokemon : currentId - 1;
+          const nextId = currentId === maxPokemon ? 1 : currentId + 1;
+
+          const prevData = await getPokemonDetails(prevId);
+          const nextData = await getPokemonDetails(nextId);
+
+          setPreviousPokemon({
+            id: prevData.id,
+            name: prevData.name,
+            sprite: prevData.sprites.front_default,
+          });
+
+          setNextPokemon({
+            id: nextData.id,
+            name: nextData.name,
+            sprite: nextData.sprites.front_default,
+          });
+        } else {
+          throw new Error('Invalid Pokémon ID or name');
+        }
       } catch (error) {
         console.error('Error fetching Pokémon details:', error);
       } finally {
@@ -24,6 +56,31 @@ const PokemonDetail = () => {
 
     fetchPokemonDetails();
   }, [id]);
+
+  // Function to get Pokémon ID by name
+  const getPokemonIdByName = async (name) => {
+    try {
+      const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`);
+      const data = await response.json();
+      return data.id;
+    } catch (error) {
+      console.error('Error fetching Pokémon by name:', error);
+      return null;
+    }
+  };
+
+  // Navigation Handlers
+  const handlePrevious = () => {
+    if (previousPokemon && previousPokemon.id) {
+      navigate(`/pokemon/${previousPokemon.id}`);
+    }
+  };
+
+  const handleNext = () => {
+    if (nextPokemon && nextPokemon.id) {
+      navigate(`/pokemon/${nextPokemon.id}`);
+    }
+  };
 
   // Render loading state
   const renderLoading = () => (
@@ -38,6 +95,9 @@ const PokemonDetail = () => {
       <Typography variant="h5">Pokémon not found.</Typography>
     </Box>
   );
+
+  if (loading) return renderLoading();
+  if (!pokemon) return renderNotFound();
 
   // Render type chips
   const renderTypeChips = () => (
@@ -187,6 +247,15 @@ const PokemonDetail = () => {
 
   return (
     <Box padding={4}>
+      {/* Navigation Buttons at the Top */}
+      <Box display="flex" justifyContent="space-between" marginBottom={2}>
+        <Button variant="outlined" onClick={handlePrevious} startIcon={<img src={previousPokemon.sprite} alt={previousPokemon.name} style={{ width: '30px' }} />}>
+          #{previousPokemon.id} {previousPokemon.name}
+        </Button>
+        <Button variant="outlined" onClick={handleNext} endIcon={<img src={nextPokemon.sprite} alt={nextPokemon.name} style={{ width: '30px' }} />}>
+          #{nextPokemon.id} {nextPokemon.name}
+        </Button>
+      </Box>
       <Grid2 container spacing={4}>
         <Grid2 item xs={12} md={4}>
           <img
