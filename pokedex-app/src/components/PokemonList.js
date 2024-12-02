@@ -18,7 +18,14 @@ const PokemonList = () => {
         const data = await getPokemonList(limit, (page - 1) * limit);
         const detailedPromises = data.results.map((pokemon) => getPokemonDetails(pokemon.name));
         const detailedPokemon = await Promise.all(detailedPromises);
-        setPokemonList(detailedPokemon);
+        // Only add Pokémon with IDs up to 1025
+        const validPokemon = [];
+        for (let pokemon of detailedPokemon) {
+          if (pokemon.id <= 1025) {
+            validPokemon.push(pokemon);
+          }
+        }
+        setPokemonList(validPokemon);
       } catch (error) {
         console.error('Error fetching Pokémon:', error);
       }
